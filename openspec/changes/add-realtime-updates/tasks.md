@@ -18,3 +18,5 @@
 - [ ] 4.1 Handle connection drops gracefully
 - [ ] 4.2 Reconnect automatically
 - [ ] 4.3 Sync missed updates on reconnect
+
+Note: Requires Supabase Realtime setup. Not implemented in v1.

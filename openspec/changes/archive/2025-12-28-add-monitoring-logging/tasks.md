@@ -18,6 +18,6 @@
 - [ ] 3.3 Monitor API latencies
 
 ## 4. Health Checks
-- [ ] 4.1 Create `/api/health` endpoint
-- [ ] 4.2 Check database connectivity
+- [x] 4.1 Create `/api/health` endpoint
+- [x] 4.2 Check database connectivity
 - [ ] 4.3 Set up uptime monitoring

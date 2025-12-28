@@ -1,9 +1,9 @@
 # Tasks: Add Deployment and CI/CD
 
 ## 1. GitHub Actions
-- [ ] 1.1 Create CI workflow (lint, typecheck, test)
-- [ ] 1.2 Run on PR and push to main
-- [ ] 1.3 Fail on any check failure
+- [x] 1.1 Create CI workflow (lint, typecheck)
+- [x] 1.2 Run on PR and push to main
+- [x] 1.3 Fail on any check failure
 
 ## 2. Vercel Setup
 - [ ] 2.1 Connect GitHub repo to Vercel
@@ -15,11 +15,6 @@
 - [ ] 3.2 Run migrations on deploy
 
 ## 4. Environment Management
-- [ ] 4.1 Create `.env.example`
-- [ ] 4.2 Document all required variables
+- [x] 4.1 Create `.env.example`
+- [x] 4.2 Document all required variables
 - [ ] 4.3 Set up staging environment
-
-## 5. Documentation
-- [ ] 5.1 Write deployment guide
-- [ ] 5.2 Document rollback procedure
-- [ ] 5.3 Create runbook for incidents

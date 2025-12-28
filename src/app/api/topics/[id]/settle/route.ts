@@ -81,12 +81,18 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
       const totalPool = topic.yesPool + topic.noPool;
       const winningPool = winningDirection === 'YES' ? topic.yesPool : topic.noPool;
 
+      const STREAK_MULTIPLIER_THRESHOLD = 3;
+      const STREAK_MULTIPLIER = 1.2;
+
       for (const bet of topic.bets) {
         const won = bet.direction === winningDirection;
         let payout = 0;
 
         if (won && winningPool > 0) {
-          payout = Math.floor((bet.amount / winningPool) * totalPool);
+          const basePayout = Math.floor((bet.amount / winningPool) * totalPool);
+          const newStreak = bet.user.streak + 1;
+          const hasStreakBonus = newStreak >= STREAK_MULTIPLIER_THRESHOLD;
+          payout = hasStreakBonus ? Math.floor(basePayout * STREAK_MULTIPLIER) : basePayout;
         }
 
         await tx.bet.update({
@@ -95,12 +101,13 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
         });
 
         if (won) {
+          const newStreak = bet.user.streak + 1;
           await tx.user.update({
             where: { id: bet.userId },
             data: {
               points: { increment: payout },
-              streak: { increment: 1 },
-              maxStreak: Math.max(bet.user.streak + 1, bet.user.maxStreak),
+              streak: newStreak,
+              maxStreak: Math.max(newStreak, bet.user.maxStreak),
             },
           });
 

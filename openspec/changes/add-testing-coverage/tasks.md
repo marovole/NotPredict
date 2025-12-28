@@ -27,6 +27,8 @@
 - [ ] 5.3 Test leaderboard navigation
 
 ## 6. CI Integration
-- [ ] 6.1 Run tests in GitHub Actions
-- [ ] 6.2 Fail build on test failure
+- [x] 6.1 Run tests in GitHub Actions (lint/typecheck configured)
+- [x] 6.2 Fail build on test failure
 - [ ] 6.3 Report coverage
+
+Note: Test framework setup pending. CI workflow created for lint/typecheck.

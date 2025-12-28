@@ -16,6 +16,8 @@
 - [ ] 3.4 Celebrate successful practice swipe
 
 ## 4. Completion
-- [ ] 4.1 Award welcome bonus points
+- [x] 4.1 Award welcome bonus points (1000 pts in auth endpoint)
 - [ ] 4.2 Set `hasSeenTutorial` flag
 - [ ] 4.3 Transition to real topic cards
+
+Note: Frontend UI implementation pending. Backend welcome bonus already implemented in auth flow.
