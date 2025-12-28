@@ -1,0 +1,134 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id            String        @id @default(cuid())
+  telegramId    BigInt        @unique
+  username      String?
+  firstName     String?
+  lastName      String?
+  photoUrl      String?
+  points        Int           @default(1000)
+  streak        Int           @default(0)
+  maxStreak     Int           @default(0)
+  referralCode  String        @unique @default(cuid())
+  referredBy    String?
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  bets          Bet[]
+  transactions  Transaction[]
+  dailyRewards  DailyReward[]
+
+  @@index([telegramId])
+  @@index([points(sort: Desc)])
+  @@index([referralCode])
+}
+
+model Topic {
+  id            String      @id @default(cuid())
+  title         String
+  description   String
+  imageUrl      String?
+  yesPool       Int         @default(0)
+  noPool        Int         @default(0)
+  participants  Int         @default(0)
+  status        TopicStatus @default(ACTIVE)
+  outcome       Outcome?
+  tags          String[]
+  endsAt        DateTime
+  settledAt     DateTime?
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+  bets          Bet[]
+
+  @@index([status, endsAt])
+  @@index([createdAt(sort: Desc)])
+}
+
+model Bet {
+  id            String         @id @default(cuid())
+  userId        String
+  topicId       String
+  direction     BetDirection
+  amount        Int
+  settled       Boolean        @default(false)
+  won           Boolean?
+  payout        Int?
+  createdAt     DateTime       @default(now())
+
+  user          User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  topic         Topic          @relation(fields: [topicId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, topicId])
+  @@index([userId, createdAt(sort: Desc)])
+  @@index([topicId, settled])
+}
+
+model Transaction {
+  id            String          @id @default(cuid())
+  userId        String
+  type          TransactionType
+  amount        Int
+  balance       Int
+  reference     String?
+  createdAt     DateTime        @default(now())
+
+  user          User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt(sort: Desc)])
+}
+
+model DailyReward {
+  id            String        @id @default(cuid())
+  userId        String
+  type          RewardType
+  amount        Int
+  claimedAt     DateTime      @default(now())
+
+  user          User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, claimedAt(sort: Desc)])
+}
+
+enum TopicStatus {
+  ACTIVE
+  ENDED
+  SETTLED
+  CANCELLED
+}
+
+enum Outcome {
+  YES
+  NO
+}
+
+enum BetDirection {
+  YES
+  NO
+}
+
+enum TransactionType {
+  BET_PLACED
+  BET_WON
+  BET_LOST
+  BET_REFUND
+  DAILY_CHECKIN
+  REFERRAL_BONUS
+  BANKRUPTCY_RELIEF
+  WELCOME_BONUS
+  ADMIN_ADJUSTMENT
+}
+
+enum RewardType {
+  DAILY_CHECKIN
+  BANKRUPTCY_RELIEF
+  REFERRAL
+  WELCOME
+}
