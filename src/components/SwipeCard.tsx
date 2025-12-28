@@ -1,5 +1,7 @@
 'use client';
 
+import { useState, useCallback } from 'react';
+import Image from 'next/image';
 import { motion, useMotionValue, useTransform, PanInfo } from 'framer-motion';
 import { Topic, SwipeDirection } from '@/lib/types';
 import { clsx } from 'clsx';
@@ -14,28 +16,12 @@ interface SwipeCardProps {
 export function SwipeCard({ topic, onSwipe, index }: SwipeCardProps) {
   const x = useMotionValue(0);
   const rotate = useTransform(x, [-200, 200], [-25, 25]);
+  const [exitDirection, setExitDirection] = useState<'left' | 'right' | null>(null);
   
   const yesOpacity = useTransform(x, [20, 100], [0, 1]);
   const noOpacity = useTransform(x, [-100, -20], [1, 0]);
 
-  const handleDragEnd = (_: unknown, info: PanInfo) => {
-    const threshold = 100;
-    if (info.offset.x > threshold) {
-      triggerHaptic('success');
-      onSwipe('right');
-    } else if (info.offset.x < -threshold) {
-      triggerHaptic('error');
-      onSwipe('left');
-    }
-  };
-
-  const handleDrag = (_: unknown, info: PanInfo) => {
-    if (Math.abs(info.offset.x) % 50 < 5 && Math.abs(info.offset.x) > 20) {
-      triggerHaptic('selection');
-    }
-  };
-
-  const triggerHaptic = async (style: 'light' | 'medium' | 'heavy' | 'rigid' | 'soft' | 'selection' | 'success' | 'warning' | 'error') => {
+  const triggerHaptic = useCallback(async (style: 'light' | 'medium' | 'heavy' | 'rigid' | 'soft' | 'selection' | 'success' | 'warning' | 'error') => {
     if (typeof window === 'undefined') return;
     
     try {
@@ -48,10 +34,45 @@ export function SwipeCard({ topic, onSwipe, index }: SwipeCardProps) {
         } else {
             WebApp.HapticFeedback.impactOccurred(style);
         }
-    } catch {
-        
+    } catch (error) {
+        if (process.env.NODE_ENV === 'development') {
+            console.debug('[SwipeCard] Haptic feedback unavailable:', error);
+        }
     }
-  };
+  }, []);
+
+  const handleDragEnd = useCallback((_: unknown, info: PanInfo) => {
+    const threshold = 100;
+    if (info.offset.x > threshold) {
+      setExitDirection('right');
+      triggerHaptic('success');
+      onSwipe('right');
+    } else if (info.offset.x < -threshold) {
+      setExitDirection('left');
+      triggerHaptic('error');
+      onSwipe('left');
+    }
+  }, [onSwipe, triggerHaptic]);
+
+  const handleDrag = useCallback((_: unknown, info: PanInfo) => {
+    if (Math.abs(info.offset.x) % 50 < 5 && Math.abs(info.offset.x) > 20) {
+      triggerHaptic('selection');
+    }
+  }, [triggerHaptic]);
+
+  const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
+    if (index !== 0) return;
+    
+    if (e.key === 'ArrowRight' || e.key === 'Enter') {
+      setExitDirection('right');
+      triggerHaptic('success');
+      onSwipe('right');
+    } else if (e.key === 'ArrowLeft' || e.key === 'Backspace') {
+      setExitDirection('left');
+      triggerHaptic('error');
+      onSwipe('left');
+    }
+  }, [index, onSwipe, triggerHaptic]);
 
   const isFront = index === 0;
 
@@ -67,6 +88,10 @@ export function SwipeCard({ topic, onSwipe, index }: SwipeCardProps) {
       dragElastic={0.6}
       onDrag={handleDrag}
       onDragEnd={handleDragEnd}
+      onKeyDown={handleKeyDown}
+      tabIndex={isFront ? 0 : -1}
+      role="button"
+      aria-label={`${topic.title}. Press right arrow or enter to predict YES, left arrow or backspace to predict NO`}
       initial={{ scale: 0.95, opacity: 0 }}
       animate={{ 
         scale: 1 - index * 0.05, 
@@ -74,12 +99,12 @@ export function SwipeCard({ topic, onSwipe, index }: SwipeCardProps) {
         opacity: 1 - index * 0.1 
       }}
       exit={{ 
-        x: x.get() < 0 ? -200 : 200, 
+        x: exitDirection === 'left' ? -200 : 200, 
         opacity: 0,
         transition: { duration: 0.2 } 
       }}
       className={clsx(
-        "absolute w-full h-[600px] max-w-sm bg-slate-800 rounded-2xl shadow-2xl overflow-hidden border border-slate-700 touch-none",
+        "absolute w-full h-[600px] max-w-sm bg-slate-800 rounded-2xl shadow-2xl overflow-hidden border border-slate-700 touch-none outline-none focus:ring-2 focus:ring-emerald-400",
         isFront ? "cursor-grab active:cursor-grabbing" : "pointer-events-none"
       )}
     >
@@ -99,7 +124,14 @@ export function SwipeCard({ topic, onSwipe, index }: SwipeCardProps) {
 
       <div className="h-2/3 w-full bg-slate-900 relative">
         {topic.imageUrl ? (
-            <img src={topic.imageUrl} alt={topic.title} className="w-full h-full object-cover" />
+            <Image 
+              src={topic.imageUrl} 
+              alt={topic.title} 
+              fill
+              className="object-cover"
+              sizes="(max-width: 384px) 100vw, 384px"
+              priority={index === 0}
+            />
         ) : (
             <div className="w-full h-full flex items-center justify-center text-slate-600">
                 <span className="text-6xl">?</span>

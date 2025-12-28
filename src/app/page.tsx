@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useSyncExternalStore } from 'react';
 import { Deck } from '@/components/Deck';
 import { Leaderboard } from '@/components/Leaderboard';
 import { Profile } from '@/components/Profile';
@@ -16,20 +16,36 @@ const WebAppProvider = dynamic(
     { ssr: false }
 );
 
+const emptySubscribe = () => () => {};
+const getSnapshot = () => true;
+const getServerSnapshot = () => false;
+
+function useIsClient() {
+  return useSyncExternalStore(emptySubscribe, getSnapshot, getServerSnapshot);
+}
+
 export default function Home() {
   const [view, setView] = useState<'home' | 'rank' | 'profile'>('home');
   const { points, placeBet, streak } = useGameStore();
-  const [isClient, setIsClient] = useState(false);
-
-  useEffect(() => {
-    setIsClient(true);
-  }, []);
+  const isClient = useIsClient();
 
   const handleSwipe = (id: string, dir: SwipeDirection) => {
     placeBet(id, dir);
   };
 
-  if (!isClient) return null;
+  if (!isClient) {
+    return (
+      <main className="flex min-h-screen flex-col items-center bg-brand-black p-4 pb-20 overflow-hidden">
+        <header className="w-full max-w-sm flex justify-between items-center py-4 mb-4">
+          <div className="h-8 w-32 bg-slate-800 rounded animate-pulse" />
+          <div className="h-8 w-24 bg-slate-800 rounded-full animate-pulse" />
+        </header>
+        <div className="relative w-full max-w-sm h-[600px] flex items-center justify-center">
+          <div className="w-full h-full max-w-sm bg-slate-800 rounded-2xl animate-pulse" />
+        </div>
+      </main>
+    );
+  }
 
   return (
     <main className="flex min-h-screen flex-col items-center bg-brand-black p-4 pb-20 overflow-hidden">

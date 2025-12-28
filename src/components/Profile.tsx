@@ -1,10 +1,31 @@
 'use client';
 
+import { useMemo } from 'react';
 import { Settings, History, Wallet, Share2 } from 'lucide-react';
 import { useGameStore } from '@/lib/store';
+import { MOCK_TOPICS } from '@/lib/data';
+
+function formatDate(timestamp: number): string {
+  try {
+    const date = new Date(timestamp);
+    if (isNaN(date.getTime())) return 'Unknown date';
+    return date.toLocaleDateString();
+  } catch {
+    return 'Unknown date';
+  }
+}
+
+function getTopicTitle(topicId: string): string {
+  const topic = MOCK_TOPICS.find(t => t.id === topicId);
+  return topic?.title ?? `Topic #${topicId}`;
+}
 
 export function Profile() {
   const { points, streak, bets } = useGameStore();
+  
+  const recentBets = useMemo(() => {
+    return bets.slice(-5).reverse();
+  }, [bets]);
 
   return (
     <div className="w-full max-w-sm h-full flex flex-col p-4 pb-24 animate-in fade-in duration-500">
@@ -53,16 +74,16 @@ export function Profile() {
 
       <h3 className="text-lg font-bold text-white mb-4">Recent Activity</h3>
       <div className="space-y-3">
-        {bets.length === 0 ? (
+        {recentBets.length === 0 ? (
             <div className="text-center text-slate-500 py-8">No bets placed yet</div>
         ) : (
-            bets.slice().reverse().slice(0, 5).map((bet, i) => (
-                <div key={i} className="flex justify-between items-center bg-slate-800/50 p-3 rounded-lg border border-slate-800">
+            recentBets.map((bet) => (
+                <div key={`${bet.topicId}-${bet.timestamp}`} className="flex justify-between items-center bg-slate-800/50 p-3 rounded-lg border border-slate-800">
                     <div className="flex items-center gap-3">
                         <div className={`w-2 h-10 rounded-full ${bet.direction === 'right' ? 'bg-emerald-500' : 'bg-red-500'}`} />
                         <div>
-                            <div className="text-sm text-white font-medium">Topic #{bet.topicId}</div>
-                            <div className="text-xs text-slate-500">{new Date(bet.timestamp).toLocaleDateString()}</div>
+                            <div className="text-sm text-white font-medium line-clamp-1">{getTopicTitle(bet.topicId)}</div>
+                            <div className="text-xs text-slate-500">{formatDate(bet.timestamp)}</div>
                         </div>
                     </div>
                     <div className={`font-bold ${bet.direction === 'right' ? 'text-emerald-400' : 'text-red-400'}`}>
