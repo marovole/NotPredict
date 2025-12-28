@@ -4,6 +4,7 @@ import { useState, useSyncExternalStore } from 'react';
 import { Deck } from '@/components/Deck';
 import { Leaderboard } from '@/components/Leaderboard';
 import { Profile } from '@/components/Profile';
+import { Onboarding } from '@/components/Onboarding';
 import { MOCK_TOPICS } from '@/lib/data';
 import { SwipeDirection } from '@/lib/types';
 import { useGameStore } from '@/lib/store';
@@ -26,11 +27,15 @@ function useIsClient() {
 
 export default function Home() {
   const [view, setView] = useState<'home' | 'rank' | 'profile'>('home');
-  const { points, placeBet, streak } = useGameStore();
+  const { points, placeBet, streak, hasSeenTutorial, setTutorialSeen } = useGameStore();
   const isClient = useIsClient();
 
   const handleSwipe = (id: string, dir: SwipeDirection) => {
     placeBet(id, dir);
+  };
+
+  const handleOnboardingComplete = () => {
+    setTutorialSeen();
   };
 
   if (!isClient) {
@@ -50,6 +55,8 @@ export default function Home() {
   return (
     <main className="flex min-h-screen flex-col items-center bg-brand-black p-4 pb-20 overflow-hidden">
         
+      {!hasSeenTutorial && <Onboarding onComplete={handleOnboardingComplete} />}
+
       {view === 'home' && (
         <header className="w-full max-w-sm flex justify-between items-center py-4 mb-4 animate-in fade-in slide-in-from-top-4 duration-500">
             <h1 className="text-2xl font-bold bg-gradient-to-r from-emerald-400 to-cyan-400 bg-clip-text text-transparent italic">
